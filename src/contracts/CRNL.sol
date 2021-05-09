@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import "./ICRNL.sol";
 
-contract CRDL is ICRNL {
+contract CRNL is ICRNL {
 
     // struct HashTest {
     //     uint256 n1;

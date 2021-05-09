@@ -4,14 +4,14 @@ import "./ICRNL.sol";
 
 contract CRDL is ICRNL {
 
-    struct HashTest {
-        uint256 n1;
-        uint256 n2; 
-        uint256 secret;
-        bytes secret_b;
-        uint256 hashval;
-    }
-    HashTest public hashstr;
+    // struct HashTest {
+    //     uint256 n1;
+    //     uint256 n2; 
+    //     uint256 secret;
+    //     bytes secret_b;
+    //     uint256 hashval;
+    // }
+    // HashTest public hashstr;
 
     uint128 public maxNum;
 
@@ -22,9 +22,14 @@ contract CRDL is ICRNL {
 
     uint256 public maxParticipants;
 
+    uint public startTime;
+    uint public durationCommitTime;
+    uint public durationRevealTime;
+    uint public durationRewardingTime;
+
     uint256 private _avgNum;
     uint256 private _minDifference;
-    uint256 private _totalRevealsCount;
+    //uint256 private _totalRevealsCount;
     //uint256 private _totalBetsAmount;
     uint256 private _sumNum;
     uint256 private _totalParticipants;
@@ -58,7 +63,8 @@ contract CRDL is ICRNL {
     mapping (address => UserData) private _users;
 
     constructor (uint128 maxNum_, uint256 betSize_, uint256 honorFee_, uint256 ownerFee_, 
-    uint256 counterFee_,uint256 maxParticipants_) {
+    uint256 counterFee_,uint256 maxParticipants_, uint startTime_, uint durationCommitTime_,
+    uint durationRevealTime_, uint durationRewardingTime_) {
         _owner = msg.sender;
         maxNum = maxNum_;
         betSize = betSize_;
@@ -66,28 +72,61 @@ contract CRDL is ICRNL {
         ownerFee = ownerFee_;
         counterFee = counterFee_;
         maxParticipants = maxParticipants_;
+        startTime = startTime_;
+        durationCommitTime = durationCommitTime_;
+        durationRevealTime = durationRevealTime_;
+        durationRewardingTime = durationRewardingTime_;
     }
 
-    function commit(uint256 commitHash_) public override payable{
+    modifier commitPhase() {
+        require(block.timestamp > startTime, "contract is not started");
+        require(block.timestamp < (startTime + durationCommitTime), "commit phase finished");
+        _;
+    }
+
+    modifier revealPhase(){
+        require(block.timestamp > (startTime + durationCommitTime), "reveal phase is not started");
+        require(block.timestamp < (startTime + durationCommitTime + durationRevealTime), "reveal phase is finished");
+        _;
+    }
+
+    modifier rewardPhase(){
+        require(block.timestamp > (startTime + durationCommitTime + durationRevealTime), "reward phase is not started");
+        //require(block.timestamp < (startTime + durationCommitTime + durationRevealTime + durationRewardingTime));
+        _;
+    }
+
+    modifier selfDistructPhase(){
+        require(block.timestamp > (startTime + durationCommitTime + durationRevealTime + durationRewardingTime));
+        _;
+    }
+
+    function commit(uint256 commitHash_) public override payable
+    commitPhase
+    {
         require(!_users[msg.sender].isCommited, "already commited");
         require(_totalParticipants < maxParticipants, "max part-s limit");
-        require(msg.value >= betSize + honorFee + ownerFee, "not enougth ETH");
+        require(msg.value >= betSize + honorFee + ownerFee + counterFee, "not enougth ETH");
 
         _totalParticipants++;
         _users[msg.sender].id = _totalParticipants;
         _users[msg.sender].commitHash = commitHash_;
         _users[msg.sender].isCommited = true;
 
-        uint256 extra = msg.value - (betSize + honorFee + ownerFee);
+        uint256 extra = msg.value - (betSize + honorFee + ownerFee + counterFee);
         payable(msg.sender).transfer(extra);
     }
 
-    function changeCommitHash(uint256 commitHash_) public override {
+    function changeCommitHash(uint256 commitHash_) public override 
+    commitPhase
+    {
         require(_users[msg.sender].isCommited, "not commited");
         _users[msg.sender].commitHash = commitHash_;
     }
 
-    function reveal(uint128 revealNum_, uint128 salt_) public override{
+    function reveal(uint128 revealNum_, uint128 salt_) public override
+    revealPhase
+    {
         require(_users[msg.sender].isCommited, "not commited");
         require(!_users[msg.sender].isRevealed, "already revealed"); // is it necessary?
         require(revealNum_ != 0, "0 is reserved"); // WARNING!!!
@@ -105,14 +144,18 @@ contract CRDL is ICRNL {
         _reveals[_users[msg.sender].id].user = msg.sender;
         _reveals[_users[msg.sender].id].revealNum = revealNum_;
 
-        _totalRevealsCount++;
+        //_totalRevealsCount++;
         _sumNum += revealNum_;
     }
 
-    function countRewards() public override{
+    function countRewards() public override
+    rewardPhase
+    {
         require(_users[msg.sender].isCommited, "not commited"); // necessary if cond2?
         require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
         require(!_isAwardCounted, "awards already counted");
+
+        _isAwardCounted = true;
 
         _minDifference = maxNum + 1;
         _avgNum = _sumNum / _totalParticipants;
@@ -128,7 +171,7 @@ contract CRDL is ICRNL {
 
             if(difference < _minDifference){
                 _minDifference = difference;
-                countWinners = 0;
+                countWinners = 1;
             } else if(difference == _minDifference){
                 countWinners++;
             }
@@ -137,11 +180,12 @@ contract CRDL is ICRNL {
         payable(msg.sender).transfer(_totalParticipants * counterFee); // reward for calling
         _totalParticipants--;
         payable(msg.sender).transfer(betSize); // reward for calling
-
         _winnerStake = (betSize * _totalParticipants) / countWinners; // garants not x/0?
     }
 
-    function takeReward() public override{
+    function takeReward() public override
+    rewardPhase
+    {
         require(_users[msg.sender].isCommited, "not commited"); // necessary?
         require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
         require(_isAwardCounted, "award not counted");
@@ -154,6 +198,7 @@ contract CRDL is ICRNL {
         }
 
         require(difference == _minDifference, "not winner");
+        // require(_winnerStake > 0, "winner stake = 0");
         payable(msg.sender).transfer(_winnerStake);
     }
 

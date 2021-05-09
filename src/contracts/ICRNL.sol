@@ -7,11 +7,12 @@ interface ICRNL{
     function countRewards() external;
     function takeReward() external;
 
-    //function uncommit() external payable;
+    //function uncommit() external payable; - return bet
     // optional:
     // changeOwner()
-    // rewardOwner
-    // returnBet() ???
+    // rewardOwner()
+    // selfDistruct()
+    // getPhase()
     // totalPerticipants() ???
     // USE SAFEMATH!!!
 }

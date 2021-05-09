@@ -1,0 +1,199 @@
+{
+    "contractName": "ICRNL",
+    "abi": [
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "commitHash_",
+                    "type": "uint256"
+                }
+            ],
+            "name": "changeCommitHash",
+            "outputs": [],
+            "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "commitHash_",
+                    "type": "uint256"
+                }
+            ],
+            "name": "commit",
+            "outputs": [],
+            "stateMutability": "payable",
+            "type": "function"
+        }
+    ],
+    "metadata": "{\"compiler\":{\"version\":\"0.8.4+commit.c7e474f2\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"commitHash_\",\"type\":\"uint256\"}],\"name\":\"changeCommitHash\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"commitHash_\",\"type\":\"uint256\"}],\"name\":\"commit\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"c:/Users/Trickster2038/Desktop/TpCryptoCw/src/contracts/ICRNL.sol\":\"ICRNL\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"c:/Users/Trickster2038/Desktop/TpCryptoCw/src/contracts/ICRNL.sol\":{\"keccak256\":\"0x722f1c71d9f3ddcccdca02cf1f15e06b6a942fcf51d9a161bd1bfdc9bab94209\",\"urls\":[\"bzz-raw://c7927140817a78191022cb81aadce8a0afa6b36b2c183e612e4c1dc68527ebe0\",\"dweb:/ipfs/QmcEkjFt6ZRrdj4wzyrK7d7bjDHT7xDkifohmd6fKXY6kj\"]}},\"version\":1}",
+    "bytecode": "",
+    "deployedBytecode": "",
+    "sourceMap": "",
+    "deployedSourceMap": "",
+    "sourcePath": "c:/Users/Trickster2038/Desktop/TpCryptoCw/src/contracts/ICRNL.sol",
+    "compiler": {
+        "name": "solc",
+        "version": "0.8.4+commit.c7e474f2"
+    },
+    "ast": {
+        "absolutePath": "c:/Users/Trickster2038/Desktop/TpCryptoCw/src/contracts/ICRNL.sol",
+        "exportedSymbols": {
+            "ICRNL": [
+                183
+            ]
+        },
+        "id": 184,
+        "nodeType": "SourceUnit",
+        "nodes": [
+            {
+                "id": 172,
+                "literals": [
+                    "solidity",
+                    "^",
+                    "0.8",
+                    ".0"
+                ],
+                "nodeType": "PragmaDirective",
+                "src": "0:23:1"
+            },
+            {
+                "abstract": false,
+                "baseContracts": [],
+                "contractDependencies": [],
+                "contractKind": "interface",
+                "fullyImplemented": false,
+                "id": 183,
+                "linearizedBaseContracts": [
+                    183
+                ],
+                "name": "ICRNL",
+                "nameLocation": "37:5:1",
+                "nodeType": "ContractDefinition",
+                "nodes": [
+                    {
+                        "functionSelector": "f4f98ad5",
+                        "id": 177,
+                        "implemented": false,
+                        "kind": "function",
+                        "modifiers": [],
+                        "name": "commit",
+                        "nameLocation": "58:6:1",
+                        "nodeType": "FunctionDefinition",
+                        "parameters": {
+                            "id": 175,
+                            "nodeType": "ParameterList",
+                            "parameters": [
+                                {
+                                    "constant": false,
+                                    "id": 174,
+                                    "mutability": "mutable",
+                                    "name": "commitHash_",
+                                    "nameLocation": "73:11:1",
+                                    "nodeType": "VariableDeclaration",
+                                    "scope": 177,
+                                    "src": "65:19:1",
+                                    "stateVariable": false,
+                                    "storageLocation": "default",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    },
+                                    "typeName": {
+                                        "id": 173,
+                                        "name": "uint256",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "65:7:1",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        }
+                                    },
+                                    "visibility": "internal"
+                                }
+                            ],
+                            "src": "64:21:1"
+                        },
+                        "returnParameters": {
+                            "id": 176,
+                            "nodeType": "ParameterList",
+                            "parameters": [],
+                            "src": "102:0:1"
+                        },
+                        "scope": 183,
+                        "src": "49:54:1",
+                        "stateMutability": "payable",
+                        "virtual": false,
+                        "visibility": "external"
+                    },
+                    {
+                        "functionSelector": "d8cf40b0",
+                        "id": 182,
+                        "implemented": false,
+                        "kind": "function",
+                        "modifiers": [],
+                        "name": "changeCommitHash",
+                        "nameLocation": "118:16:1",
+                        "nodeType": "FunctionDefinition",
+                        "parameters": {
+                            "id": 180,
+                            "nodeType": "ParameterList",
+                            "parameters": [
+                                {
+                                    "constant": false,
+                                    "id": 179,
+                                    "mutability": "mutable",
+                                    "name": "commitHash_",
+                                    "nameLocation": "143:11:1",
+                                    "nodeType": "VariableDeclaration",
+                                    "scope": 182,
+                                    "src": "135:19:1",
+                                    "stateVariable": false,
+                                    "storageLocation": "default",
+                                    "typeDescriptions": {
+                                        "typeIdentifier": "t_uint256",
+                                        "typeString": "uint256"
+                                    },
+                                    "typeName": {
+                                        "id": 178,
+                                        "name": "uint256",
+                                        "nodeType": "ElementaryTypeName",
+                                        "src": "135:7:1",
+                                        "typeDescriptions": {
+                                            "typeIdentifier": "t_uint256",
+                                            "typeString": "uint256"
+                                        }
+                                    },
+                                    "visibility": "internal"
+                                }
+                            ],
+                            "src": "134:21:1"
+                        },
+                        "returnParameters": {
+                            "id": 181,
+                            "nodeType": "ParameterList",
+                            "parameters": [],
+                            "src": "164:0:1"
+                        },
+                        "scope": 183,
+                        "src": "109:56:1",
+                        "stateMutability": "nonpayable",
+                        "virtual": false,
+                        "visibility": "external"
+                    }
+                ],
+                "scope": 184,
+                "src": "27:186:1",
+                "usedErrors": []
+            }
+        ],
+        "src": "0:213:1"
+    },
+    "functionHashes": {
+        "changeCommitHash(uint256)": "d8cf40b0",
+        "commit(uint256)": "f4f98ad5"
+    },
+    "gasEstimates": null
+}

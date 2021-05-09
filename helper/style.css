@@ -1,0 +1,23 @@
+#mainCard {
+    width: fit-content;
+    height: fit-content;
+    padding: 16px;
+    margin: auto;
+    margin-top: 256px;
+}
+
+#buttonsDiv {
+    margin-top: 16px;
+    text-align: center;
+}
+
+body {
+    background: url(background.jpg) repeat;
+}
+th {
+    padding: 8px;
+}
+textarea {
+    resize: none;
+    scroll-behavior: auto;
+}

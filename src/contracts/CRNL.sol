@@ -3,15 +3,16 @@ pragma solidity ^0.8.0;
 import "./ICRNL.sol";
 
 contract CRDL is ICRNL {
-    // struct HashTest {
-    //     uint256 n1;
-    //     uint256 n2; 
-    //     uint256 secret;
-    //     bytes secret_b;
-    //     uint256 hashval;
-    // }
 
-    // HashTest public hashstr;
+    struct HashTest {
+        uint256 n1;
+        uint256 n2; 
+        uint256 secret;
+        bytes secret_b;
+        uint256 hashval;
+    }
+    HashTest public hashstr;
+
     uint128 public maxNum;
 
     uint256 public betSize;
@@ -68,33 +69,37 @@ contract CRDL is ICRNL {
     }
 
     function commit(uint256 commitHash_) public override payable{
-        require(!_users[msg.sender].isCommited);
-        require(_totalParticipants < maxParticipants);
-        require(msg.value >= betSize + honorFee + ownerFee);
+        require(!_users[msg.sender].isCommited, "already commited");
+        require(_totalParticipants < maxParticipants, "max part-s limit");
+        require(msg.value >= betSize + honorFee + ownerFee, "not enougth ETH");
 
         _totalParticipants++;
         _users[msg.sender].id = _totalParticipants;
         _users[msg.sender].commitHash = commitHash_;
+        _users[msg.sender].isCommited = true;
 
         uint256 extra = msg.value - (betSize + honorFee + ownerFee);
         payable(msg.sender).transfer(extra);
     }
 
     function changeCommitHash(uint256 commitHash_) public override {
-        require(_users[msg.sender].isCommited);
+        require(_users[msg.sender].isCommited, "not commited");
         _users[msg.sender].commitHash = commitHash_;
     }
 
-    function reveal(uint128 revealNum_, uint128 salt_) public override payable{
-        require(_users[msg.sender].isCommited);
-        require(!_users[msg.sender].isRevealed); // is it necessary?
-        require(revealNum_ != 0); // WARNING!!!
-        require(revealNum_ <= maxNum);
-        uint256 secret = uint256((1<<255) + (revealNum_<<128) + salt_);
+    function reveal(uint128 revealNum_, uint128 salt_) public override{
+        require(_users[msg.sender].isCommited, "not commited");
+        require(!_users[msg.sender].isRevealed, "already revealed"); // is it necessary?
+        require(revealNum_ != 0, "0 is reserved"); // WARNING!!!
+        require(revealNum_ <= maxNum, "num limit overflow");
+        uint256 revealNum256 = uint256(revealNum_);
+        uint256 salt256 = uint256(salt_);
+
+        uint256 secret = uint256((1<<255) + (revealNum256<<128) + salt256);
         bytes memory secret_b = abi.encodePacked(secret);
         uint256 proof = uint256(sha256(secret_b));
 
-        require(proof == _users[msg.sender].commitHash);
+        require(proof == _users[msg.sender].commitHash, "hash check fail");
         payable(msg.sender).transfer(honorFee);
         _users[msg.sender].isRevealed = true;
         _reveals[_users[msg.sender].id].user = msg.sender;
@@ -104,10 +109,10 @@ contract CRDL is ICRNL {
         _sumNum += revealNum_;
     }
 
-    function countRewards() public override payable{
-        require(_users[msg.sender].isCommited); // necessary if cond2?
-        require(_users[msg.sender].isRevealed); // Necessary to exclude x/0
-        require(!_isAwardCounted);
+    function countRewards() public override{
+        require(_users[msg.sender].isCommited, "not commited"); // necessary if cond2?
+        require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
+        require(!_isAwardCounted, "awards already counted");
 
         _minDifference = maxNum + 1;
         _avgNum = _sumNum / _totalParticipants;
@@ -136,10 +141,10 @@ contract CRDL is ICRNL {
         _winnerStake = (betSize * _totalParticipants) / countWinners; // garants not x/0?
     }
 
-    function takeReward() public override payable{
-        require(_users[msg.sender].isCommited); // necessary?
-        require(_users[msg.sender].isRevealed); // Necessary to exclude x/0
-        require(_isAwardCounted);
+    function takeReward() public override{
+        require(_users[msg.sender].isCommited, "not commited"); // necessary?
+        require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
+        require(_isAwardCounted, "award not counted");
 
         uint256 difference;
         if(_reveals[_users[msg.sender].id].revealNum > _avgNum){
@@ -148,7 +153,7 @@ contract CRDL is ICRNL {
             difference = _avgNum - _reveals[_users[msg.sender].id].revealNum;
         }
 
-        require(difference == _minDifference);
+        require(difference == _minDifference, "not winner");
         payable(msg.sender).transfer(_winnerStake);
     }
 
@@ -158,5 +163,9 @@ contract CRDL is ICRNL {
     //     hashstr.secret = uint256((1<<255) + (hashstr.n1<<128) + hashstr.n2);
     //     hashstr.secret_b = abi.encodePacked(hashstr.secret);
     //     hashstr.hashval = uint256(sha256(hashstr.secret_b));
+    // }
+
+    // function hashCheck1(uint256 hash_) public view{
+    //     require(hash_ == hashstr.hashval, "hash error");
     // }
 }

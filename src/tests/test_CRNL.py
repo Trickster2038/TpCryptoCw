@@ -6,7 +6,7 @@ import pytest
 
 @pytest.fixture(scope="function", autouse=True)
 def deploy_fixture(fn_isolation):
-    CRNL.deploy(100,100,100,10,10,15,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
+    CRNL.deploy(100, True, 100,100,10,10,15,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
 
 def test_default_usage():
     t = CRNL[0]

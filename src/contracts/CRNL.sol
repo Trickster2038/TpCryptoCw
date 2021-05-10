@@ -4,15 +4,6 @@ import "./ICRNL.sol";
 
 contract CRNL is ICRNL {
 
-    // struct HashTest {
-    //     uint256 n1;
-    //     uint256 n2; 
-    //     uint256 secret;
-    //     bytes secret_b;
-    //     uint256 hashval;
-    // }
-    // HashTest public hashstr;
-
     uint128 public maxNum;
 
     uint256 public betSize;
@@ -36,14 +27,16 @@ contract CRNL is ICRNL {
     uint256 private _winnerStake;
     bool private _isAwardCounted;
     address private _owner;
+    uint256 public ownerRewardUnspent;
+    bool public isDistructRewardOwner;
 
     struct UserData {
         uint256 id;
         uint256 commitHash;
         bool isCommited;
         uint128 revealNum;
-        // uint128 revealSalt;
         bool isRevealed;
+        bool isTookPrize;
         // bool isWinner;
     }
 
@@ -54,18 +47,14 @@ contract CRNL is ICRNL {
 
     // id => num, user
     mapping (uint256 => Reveal) private _reveals;
-
-    // id => bet
-    // mapping (uint256 => uint128) private _reveals;
-    // id => user
-    // mapping (uint256 => address) private _usersById;
     
     mapping (address => UserData) private _users;
 
-    constructor (uint128 maxNum_, uint256 betSize_, uint256 honorFee_, uint256 ownerFee_, 
+    constructor (uint128 maxNum_, bool isDistructRewardOwner_, uint256 betSize_, uint256 honorFee_, uint256 ownerFee_, 
     uint256 counterFee_,uint256 maxParticipants_, uint startTime_, uint durationCommitTime_,
     uint durationRevealTime_, uint durationRewardingTime_) {
         _owner = msg.sender;
+        isDistructRewardOwner = isDistructRewardOwner_;
         maxNum = maxNum_;
         betSize = betSize_;
         honorFee = honorFee_;
@@ -101,6 +90,10 @@ contract CRNL is ICRNL {
         _;
     }
 
+    function totalParticipants() public override view returns(uint256 participants_) {
+        return _totalParticipants;
+    }
+
     function commit(uint256 commitHash_) public override payable
     commitPhase
     {
@@ -112,6 +105,8 @@ contract CRNL is ICRNL {
         _users[msg.sender].id = _totalParticipants;
         _users[msg.sender].commitHash = commitHash_;
         _users[msg.sender].isCommited = true;
+
+        ownerRewardUnspent += ownerFee;
 
         uint256 extra = msg.value - (betSize + honorFee + ownerFee + counterFee);
         payable(msg.sender).transfer(extra);
@@ -188,6 +183,7 @@ contract CRNL is ICRNL {
     {
         require(_users[msg.sender].isCommited, "not commited"); // necessary?
         require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
+        require(!_users[msg.sender].isTookPrize, "prize is already taken");
         require(_isAwardCounted, "award not counted");
 
         uint256 difference;
@@ -202,15 +198,23 @@ contract CRNL is ICRNL {
         payable(msg.sender).transfer(_winnerStake);
     }
 
-    // function hashPair(uint128 n1_, uint128 n2_) public{
-    //     hashstr.n1 = uint256(n1_);
-    //     hashstr.n2 = uint256(n2_);
-    //     hashstr.secret = uint256((1<<255) + (hashstr.n1<<128) + hashstr.n2);
-    //     hashstr.secret_b = abi.encodePacked(hashstr.secret);
-    //     hashstr.hashval = uint256(sha256(hashstr.secret_b));
-    // }
+    function changeOwner(address owner_) public {
+        require(msg.sender == _owner);
+        _owner = owner_;
+    }
 
-    // function hashCheck1(uint256 hash_) public view{
-    //     require(hash_ == hashstr.hashval, "hash error");
-    // }
+    function rewardOwner() public {
+        payable(_owner).transfer(ownerRewardUnspent);
+        ownerRewardUnspent = 0;
+    }
+
+    function distruct() public
+    selfDistructPhase
+    {
+        if(isDistructRewardOwner){
+            selfdestruct(payable(_owner));
+        } else {
+            selfdestruct(payable(msg.sender));
+        }
+    }
 }

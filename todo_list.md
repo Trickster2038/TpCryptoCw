@@ -1,4 +1,3 @@
 # TODO
 
-- fix double commit
-- reveal bugs fail
+- safe math

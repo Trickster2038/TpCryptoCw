@@ -20,7 +20,7 @@ contract CRNL is ICRNL {
 
     uint256 private _avgNum;    // 2/3 of avg
     uint256 private _minDifference;
-    //uint256 private _totalRevealsCount;
+    uint256 private _totalRevealsCount;
     //uint256 private _totalBetsAmount;
     uint256 private _sumNum;
     uint256 private _totalParticipants;
@@ -147,7 +147,7 @@ contract CRNL is ICRNL {
         _reveals[_users[msg.sender].id].user = msg.sender;
         _reveals[_users[msg.sender].id].revealNum = revealNum_;
 
-        //_totalRevealsCount++;
+        _totalRevealsCount++;
         _sumNum += revealNum_;
     }
 
@@ -161,7 +161,7 @@ contract CRNL is ICRNL {
         _isRewardCounted = true;
 
         _minDifference = maxNum + 1;
-        _avgNum = (_sumNum * 2) / (_totalParticipants * 3);
+        _avgNum = (_sumNum * 2) / (_totalRevealsCount * 3);
         uint256 difference;
         uint256 i;
         uint256 countWinners = 0;

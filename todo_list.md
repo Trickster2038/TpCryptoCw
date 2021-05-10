@@ -11,9 +11,9 @@ ICRNL:
 
 // uncommit()/getMoneyBack()
 
+// proportionalDestructFee()
+
 // USE SAFEMATH!!!
 ```
 
 ## Tests
-- fault tolerance
-- destruct fees

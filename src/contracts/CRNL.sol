@@ -25,10 +25,10 @@ contract CRNL is ICRNL {
     uint256 private _sumNum;
     uint256 private _totalParticipants;
     uint256 private _winnerStake;
-    bool private _isAwardCounted;
+    bool private _isRewardCounted;
     address private _owner;
     uint256 public ownerRewardUnspent;
-    bool public isDistructRewardOwner;
+    bool public isDestructRewardOwner;
 
     struct UserData {
         uint256 id;
@@ -50,11 +50,11 @@ contract CRNL is ICRNL {
     
     mapping (address => UserData) private _users;
 
-    constructor (uint128 maxNum_, bool isDistructRewardOwner_, uint256 betSize_, uint256 honorFee_, uint256 ownerFee_, 
+    constructor (uint128 maxNum_, bool isDestructRewardOwner_, uint256 betSize_, uint256 honorFee_, uint256 ownerFee_, 
     uint256 counterFee_,uint256 maxParticipants_, uint startTime_, uint durationCommitTime_,
     uint durationRevealTime_, uint durationRewardingTime_) {
         _owner = msg.sender;
-        isDistructRewardOwner = isDistructRewardOwner_;
+        isDestructRewardOwner = isDestructRewardOwner_;
         maxNum = maxNum_;
         betSize = betSize_;
         honorFee = honorFee_;
@@ -85,14 +85,19 @@ contract CRNL is ICRNL {
         _;
     }
 
-    modifier selfDistructPhase(){
+    modifier selfDestructPhase(){
         require(block.timestamp > (startTime + durationCommitTime + durationRevealTime + durationRewardingTime),
-        "distruct phase is not started");
+        "destruct phase is not started");
         _;
     }
 
-    function totalParticipants() public override view returns(uint256 participants_) {
-        return _totalParticipants;
+    function isFreePlaces() public override view commitPhase returns(bool isFreePlaces_)
+    {
+        return (_totalParticipants < maxParticipants);
+    }
+
+    function isRewardCounted() public override view returns(bool isRewardCounted_){
+        return _isRewardCounted;
     }
 
     function commit(uint256 commitHash_) public override payable
@@ -149,9 +154,9 @@ contract CRNL is ICRNL {
     {
         require(_users[msg.sender].isCommited, "not commited"); // necessary if cond2?
         require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
-        require(!_isAwardCounted, "rewards already counted");
+        require(!_isRewardCounted, "rewards already counted");
 
-        _isAwardCounted = true;
+        _isRewardCounted = true;
 
         _minDifference = maxNum + 1;
         _avgNum = (_sumNum * 2) / (_totalParticipants * 3);
@@ -185,7 +190,7 @@ contract CRNL is ICRNL {
         require(_users[msg.sender].isCommited, "not commited"); // necessary?
         require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
         require(!_users[msg.sender].isTookReward, "reward is already taken");
-        require(_isAwardCounted, "reward not counted");
+        require(_isRewardCounted, "reward not counted");
 
         uint256 difference;
         if(_reveals[_users[msg.sender].id].revealNum > _avgNum){
@@ -211,10 +216,10 @@ contract CRNL is ICRNL {
         ownerRewardUnspent = 0;
     }
 
-    function distruct() public
-    selfDistructPhase
+    function destruct() public
+    selfDestructPhase
     {
-        if(isDistructRewardOwner){
+        if(isDestructRewardOwner){
             selfdestruct(payable(_owner));
         } else {
             selfdestruct(payable(msg.sender));

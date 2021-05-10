@@ -6,12 +6,7 @@ interface ICRNL{
     function reveal(uint128 revealNum_, uint128 salt_) external;
     function countRewards() external;
     function takeReward() external;
-    function totalParticipants() external view returns(uint256 participants_);
-
-    // optional:
-    // getPhase()
-    // uncommit()/getMoneyBack()
-    // totalParticipants() ???
-    // USE SAFEMATH!!!
+    function isFreePlaces() external view returns(bool isFreePlaces_);
+    function isRewardCounted() external view returns(bool isRewardCounted_);
 }
 

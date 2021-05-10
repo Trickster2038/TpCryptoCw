@@ -107,6 +107,7 @@ def test_views():
         {'from':accounts[2], 'value': 220}) # random
     assert(t.isFreePlaces() == False)
 
+# checks that limit of participants can't be overflown
 def test_people_limit():
     CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
     t = CRNL[1]
@@ -119,7 +120,7 @@ def test_people_limit():
         t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
             {'from':accounts[3], 'value': 220}) # random
 
-
+# checks that reCall of commit, reveal, countReward, takeReward is unable
 def test_double_calls():
     t = CRNL[0]
     chain.sleep(1) 
@@ -149,6 +150,7 @@ def test_double_calls():
     with reverts("reward is already taken"):
         t.takeReward({'from':accounts[1]}) # 5 is the closest to 6 
 
+# checks that time modifiers works
 def test_time_logic():
     t = CRNL[0]
     chain.sleep(1) 
@@ -184,6 +186,7 @@ def test_time_logic():
     chain.sleep(86401) 
     t.destruct({'from':accounts[7]})
 
+# cheks that stages can't be skipped
 def test_stages_logic():
     t = CRNL[0]
     chain.sleep(1) 
@@ -212,6 +215,7 @@ def test_stages_logic():
     chain.sleep(86401) 
     t.destruct({'from':accounts[7]})
 
+# cheks that contact works if someone didn't reveal
 def test_fault_tolerance():
     t = CRNL[0]
     chain.sleep(1) 
@@ -231,12 +235,13 @@ def test_fault_tolerance():
     #t.reveal(10,666,{'from':accounts[3]})
 
     chain.sleep(86401) 
-    t.countRewards({'from':accounts[2]}) # 2/3 AVG = (2/3)*((5 + 15) / 2)  => 6.66
+    t.countRewards({'from':accounts[2]}) # 2/3 AVG = (2/3)*((5 + 15) / 2)  = 6.67 => 6
     balance = accounts[1].balance()
     t.takeReward({'from':accounts[1]}) # 5 is the closest to 6 
     assert(accounts[1].balance() > balance)
     # assert True
 
+# cheks that contract count prize size correct
 def test_two_winners():
     t = CRNL[0]
     chain.sleep(1) 

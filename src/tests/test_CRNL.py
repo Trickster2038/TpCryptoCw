@@ -228,3 +228,34 @@ def test_fault_tolerance():
     t.countRewards({'from':accounts[2]}) # 2/3 AVG = (2/3)*((5 + 15) / 2)  => 6.66
     t.takeReward({'from':accounts[1]}) # 5 is the closest to 6 
     # assert True
+
+def test_two_winners():
+    t = CRNL[0]
+    chain.sleep(1) 
+
+    t.commit(84237577606170373470970710271612687310126724891082767247421816067059279455482, \
+        {'from':accounts[1], 'value': 225}) # 15, 777
+    t.commit(65256417849135098107207539788601443641021523921824715219531979081585702641459, \
+        {'from':accounts[2], 'value': 220}) # 10, 666
+    t.commit(65256417849135098107207539788601443641021523921824715219531979081585702641459, \
+        {'from':accounts[3], 'value': 220}) # 10, 666  
+
+    chain.sleep(86401) 
+    t.reveal(15,777,{'from':accounts[1]})
+    t.reveal(10,666,{'from':accounts[2]})
+    t.reveal(10,666,{'from':accounts[3]})
+
+    chain.sleep(86401) 
+    t.countRewards({'from':accounts[3]}) # 2/3 AVG = 7.78 => 7
+
+    balance1 = accounts[2].balance()
+    t.takeReward({'from':accounts[2]}) # 10 is the closest to 7 
+    assert(accounts[2].balance() > balance1)
+
+    balance2 = accounts[3].balance()
+    t.takeReward({'from':accounts[3]}) # 10 is the closest to 7 
+    assert(accounts[3].balance() > balance2)
+    
+    with reverts("not winner"):
+        t.takeReward({'from':accounts[1]})
+

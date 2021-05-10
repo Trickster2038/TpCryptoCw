@@ -3,45 +3,44 @@ pragma solidity ^0.8.0;
 import "./ICRNL.sol";
 import "./SafeMath.sol";
 
+// Commit-reveal numeric lottery
 contract CRNL is ICRNL {
 
     using SafeMath for uint;
     using SafeMath for uint128;
 
-    uint128 public maxNum;
+    uint128 public maxNum; // max size of Ni
 
-    uint256 public betSize;
+    uint256 public betSize; // bet & different fees sizes
     uint256 public honorFee;
     uint256 public ownerFee;
     uint256 public counterFee;
 
-    uint256 public maxParticipants;
+    uint256 public maxParticipants; // max number of users
 
-    uint public startTime;
+    uint public startTime;  // time params of different phases
     uint public durationCommitTime;
     uint public durationRevealTime;
     uint public durationRewardingTime;
 
-    uint256 private _avgNum;    // 2/3 of avg
-    uint256 private _minDifference;
-    uint256 private _totalRevealsCount;
-    //uint256 private _totalBetsAmount;
-    uint256 private _sumNum;
-    uint256 private _totalParticipants;
-    uint256 private _winnerStake;
-    bool private _isRewardCounted;
+    uint256 private _avgNum;    // 2/3 of real avg
+    uint256 private _minDifference; // min(Ni-_avgNum)
+    uint256 private _totalRevealsCount; // number of revealed users
+    uint256 private _sumNum; // sum(Ni)
+    uint256 private _totalParticipants; // count(Users)
+    uint256 private _winnerStake; // reward size
+    bool private _isRewardCounted; 
     address private _owner;
-    uint256 public ownerRewardUnspent;
-    bool public isDestructRewardOwner;
+    uint256 public ownerRewardUnspent; // unspent owner fees
+    bool public isDestructRewardOwner; // who gets destruct reward
 
     struct UserData {
         uint256 id;
-        uint256 commitHash;
+        uint256 commitHash; // hash(Ni+salt)
         bool isCommited;
-        uint128 revealNum;
+        uint128 revealNum; // Ni
         bool isRevealed;
-        bool isTookReward;
-        // bool isWinner;
+        bool isTookReward; 
     }
 
     struct Reveal {
@@ -49,7 +48,7 @@ contract CRNL is ICRNL {
         address user;
     }
 
-    // id => num, user
+    // id => Ni, userAddress
     mapping (uint256 => Reveal) private _reveals;
     
     mapping (address => UserData) private _users;
@@ -59,18 +58,25 @@ contract CRNL is ICRNL {
     uint256 maxParticipants_, 
     uint startTime_, uint durationCommitTime_, uint durationRevealTime_, uint durationRewardingTime_) {
         _owner = msg.sender;
-        isDestructRewardOwner = isDestructRewardOwner_;
-        maxNum = maxNum_;
+        isDestructRewardOwner = isDestructRewardOwner_; // who gets destruct reward
+        maxNum = maxNum_;   
+        
+        // setting fees:
         betSize = betSize_;
         honorFee = honorFee_;
         ownerFee = ownerFee_;
         counterFee = counterFee_;
-        maxParticipants = maxParticipants_;
-        startTime = startTime_;
+
+        maxParticipants = maxParticipants_; // max number of users
+
+        // time params of different phases:
+        startTime = startTime_; 
         durationCommitTime = durationCommitTime_;
         durationRevealTime = durationRevealTime_;
         durationRewardingTime = durationRewardingTime_;
     }
+
+    // modifiers to control in which phase contrct is (by time):
 
     modifier commitPhase() {
         require(block.timestamp > startTime, "contract is not started");
@@ -86,10 +92,11 @@ contract CRNL is ICRNL {
 
     modifier rewardPhase(){
         require(block.timestamp > (startTime.add(durationCommitTime).add(durationRevealTime)), "reward phase is not started");
-        //require(block.timestamp < (startTime + durationCommitTime + durationRevealTime + durationRewardingTime));
         _;
     }
 
+    // after (startTime + ... + durationRewardingTime) contract can be deleted, 
+    // user ETH goes to owner or destructor (depends on settings)
     modifier selfDestructPhase(){
         require(block.timestamp > startTime.add(durationCommitTime) 
                                             .add(durationRevealTime) 
@@ -99,15 +106,21 @@ contract CRNL is ICRNL {
     }
 
     // buggy working with "commitPhase" modifier
+    // let new user know if he can became participant
     function isFreePlaces() public override view returns(bool isFreePlaces_)
     {
         return (_totalParticipants < maxParticipants);
     }
 
+    // shows if rewardCount() called already
     function isRewardCounted() public override view returns(bool isRewardCounted_){
         return _isRewardCounted;
     }
 
+    /* 
+        1) saves hash(Ni+salt)
+        2) gets ETH = bet + fees[] from new user
+    */
     function commit(uint256 commitHash_) public override payable
     commitPhase
     {
@@ -126,6 +139,7 @@ contract CRNL is ICRNL {
         payable(msg.sender).transfer(extra);
     }
 
+    // changes hash(Ni+salt) without any fees
     function changeCommitHash(uint256 commitHash_) public override 
     commitPhase
     {
@@ -133,17 +147,22 @@ contract CRNL is ICRNL {
         _users[msg.sender].commitHash = commitHash_;
     }
 
+    /* 
+        1) gets reveal 
+        2) checks commit_hash == hash(reveal+salt)
+        3) returns honorFee if hashes equal
+    */
     function reveal(uint128 revealNum_, uint128 salt_) public override
     revealPhase
     {
         require(_users[msg.sender].isCommited, "not commited");
-        require(!_users[msg.sender].isRevealed, "already revealed"); // is it necessary?
-        require(revealNum_ != 0, "0 is reserved"); // WARNING!!!
+        require(!_users[msg.sender].isRevealed, "already revealed"); 
+        require(revealNum_ != 0, "0 is reserved"); // 0 is default value
         require(revealNum_ <= maxNum, "num limit overflow");
         uint256 revealNum256 = uint256(revealNum_);
         uint256 salt256 = uint256(salt_);
         
-        // safe due to 128 => 256 
+        // overflow-safe due to 128 => 256 transformations
         uint256 secret = uint256((1<<255) + (revealNum256<<128) + salt256);
         bytes memory secret_b = abi.encodePacked(secret);
         uint256 proof = uint256(sha256(secret_b));
@@ -159,10 +178,16 @@ contract CRNL is ICRNL {
         _sumNum = _sumNum.add(revealNum_);
     }
 
+    /*
+        1) counts min(Ni - avg) and num_of_winners;
+        2) counts prize = bet * users_count / num_of_winners
+        3) returns bet to msg.sender as reward for calling
+        4) pays counterFees to msg.sender
+    */
     function countRewards() public override
     rewardPhase
     {
-        require(_users[msg.sender].isCommited, "not commited"); // necessary if cond2?
+        require(_users[msg.sender].isCommited, "not commited"); 
         require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
         require(!_isRewardCounted, "rewards already counted");
 
@@ -170,11 +195,13 @@ contract CRNL is ICRNL {
 
         // safe due to 128 => 256
         _minDifference = uint256(maxNum) + 1;
-        _avgNum = ( _sumNum.mul(2) ).div( _totalRevealsCount.mul(3) );
+        _avgNum = ( _sumNum.mul(2) ).div( _totalRevealsCount.mul(3) ); // = 2/3 AVG
         uint256 difference;
         uint256 i;
-        uint256 countWinners = 0; // at least 1 must exist
+        uint256 countWinners = 1; // at least 1 must exist
         for (i = 1; i <= _totalParticipants; i++) {
+
+            // difference = abs(avg - Ni)
             if(_reveals[i].revealNum > _avgNum){
                 difference = _reveals[i].revealNum - _avgNum;
             } else {
@@ -190,20 +217,25 @@ contract CRNL is ICRNL {
         }
         
         payable(msg.sender).transfer(_totalParticipants.mul(counterFee)); // reward for calling
-        _totalParticipants = _totalParticipants.sub(1);
-        payable(msg.sender).transfer(betSize); // reward for calling
-        _winnerStake = (betSize.mul(_totalParticipants)).div(countWinners); // garants not x/0?
+        _totalParticipants = _totalParticipants.sub(1); // we can't use his bet as part of fund
+        payable(msg.sender).transfer(betSize); // returns bet as additional reward for calling
+
+        // overflow-safe: = betSize*0 / 1 = 0 if only 1 user revealed
+        _winnerStake = (betSize.mul(_totalParticipants)).div(countWinners); 
     }
 
+    // if (userIsWinner && rewardIsCounted) gives user the prize
     function takeReward() public override
     rewardPhase
     {
-        require(_users[msg.sender].isCommited, "not commited"); // necessary?
+        require(_users[msg.sender].isCommited, "not commited"); 
         require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
         require(!_users[msg.sender].isTookReward, "reward is already taken");
         require(_isRewardCounted, "reward not counted");
 
         uint256 difference;
+
+        // difference = abs(_avgNum - Ni)
         if(_reveals[_users[msg.sender].id].revealNum > _avgNum){
             difference = _reveals[_users[msg.sender].id].revealNum .sub(_avgNum);
         } else {
@@ -211,7 +243,6 @@ contract CRNL is ICRNL {
         }
 
         require(difference == _minDifference, "not winner");
-        // require(_winnerStake > 0, "winner stake = 0");
         payable(msg.sender).transfer(_winnerStake);
         _users[msg.sender].isTookReward = true;
     }
@@ -221,12 +252,14 @@ contract CRNL is ICRNL {
         _owner = owner_;
     }
 
-    // owner's Fee is independent from time
+    // owner's fee transfer is independent from time
     function rewardOwner() public {
         payable(_owner).transfer(ownerRewardUnspent);
         ownerRewardUnspent = 0;
     }
 
+    // allows to destruct contract after use
+    // unspent ETH goes to owner or destructor (depends on settings)
     function destruct() public
     selfDestructPhase
     {

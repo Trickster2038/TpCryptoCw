@@ -4,6 +4,7 @@ from brownie import reverts
 from brownie import chain
 import pytest
 
+# deploys default contract
 @pytest.fixture(scope="function", autouse=True)
 def deploy_fixture(fn_isolation):
     CRNL.deploy(100, True, \
@@ -11,6 +12,7 @@ def deploy_fixture(fn_isolation):
         15, \
         chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
 
+# checks if all functions work in normal conditions
 def test_default_usage():
     t = CRNL[0]
     chain.sleep(1) 
@@ -52,6 +54,7 @@ def test_default_usage():
     t.destruct({'from':accounts[7]})
     # assert True
 
+# checks that destruct fees are recived by owner or destructor (depends on settings)
 def test_destruct_fees():
     t = CRNL[0]
     t2 = CRNL.deploy(100, False, 100,100,10,10,15,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
@@ -68,7 +71,7 @@ def test_destruct_fees():
     t2.destruct({'from':accounts[7]})
     assert(balance2 == accounts[7].balance() - 220)
 
-
+# checks that fake revealNumber fails to reveal
 def test_fake_reveal():
     t = CRNL[0]
     chain.sleep(1) 
@@ -78,6 +81,7 @@ def test_fake_reveal():
     with reverts("hash check fail"):
         t.reveal(8,111,{'from':accounts[1]})
 
+# checks that low msg.value fails to commit
 def test_low_balance():
     t = CRNL[0]
     chain.sleep(1) 
@@ -85,12 +89,14 @@ def test_low_balance():
         t.commit(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
         {'from':accounts[1], 'value': 219}) # 5, 654
 
+# test that changeOwner() works and only owner can call it
 def test_change_owner():
     t = CRNL[0]
     with reverts("only owner can transfer his rights"):
         t.changeOwner(accounts[5], {'from':accounts[1]})
     t.changeOwner(accounts[5], {'from':accounts[0]})
 
+# test of view functions
 def test_views():
     t = CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
     chain.sleep(1) 

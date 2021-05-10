@@ -30,7 +30,7 @@ def test_default_usage():
     t.rewardOwner({'from':accounts[6]})
     chain.sleep(86401) 
     t.destruct({'from':accounts[7]})
-    assert True
+    # assert True
 
 def test_fake_reveal():
     t = CRNL[0]
@@ -47,6 +47,35 @@ def test_low_balance():
     with reverts("not enougth ETH"):
         t.commit(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
         {'from':accounts[1], 'value': 219}) # 5, 654
+
+def test_change_owner():
+    t = CRNL[0]
+    with reverts("only owner can transfer his rights"):
+        t.changeOwner(accounts[5], {'from':accounts[1]})
+    t.changeOwner(accounts[5], {'from':accounts[0]})
+
+def test_views():
+    t = CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
+    chain.sleep(1) 
+    assert(t.isFreePlaces() == True)
+    t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+        {'from':accounts[1], 'value': 220}) # random
+    t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+        {'from':accounts[2], 'value': 220}) # random
+    assert(t.isFreePlaces() == False)
+
+def test_people_limit():
+    CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
+    t = CRNL[1]
+    chain.sleep(1) 
+    t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+        {'from':accounts[1], 'value': 220}) # random
+    t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+        {'from':accounts[2], 'value': 220}) # random
+    with reverts("max part-s limit overflow"):
+        t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+            {'from':accounts[3], 'value': 220}) # random
+
 
 def test_double_calls():
     t = CRNL[0]

@@ -91,7 +91,8 @@ contract CRNL is ICRNL {
         _;
     }
 
-    function isFreePlaces() public override view commitPhase returns(bool isFreePlaces_)
+    // buggy working with "commitPhase" modifier
+    function isFreePlaces() public override view returns(bool isFreePlaces_)
     {
         return (_totalParticipants < maxParticipants);
     }
@@ -104,7 +105,7 @@ contract CRNL is ICRNL {
     commitPhase
     {
         require(!_users[msg.sender].isCommited, "already commited");
-        require(_totalParticipants < maxParticipants, "max part-s limit");
+        require(_totalParticipants < maxParticipants, "max part-s limit overflow");
         require(msg.value >= betSize + honorFee + ownerFee + counterFee, "not enougth ETH");
 
         _totalParticipants++;
@@ -206,7 +207,7 @@ contract CRNL is ICRNL {
     }
 
     function changeOwner(address owner_) public {
-        require(msg.sender == _owner);
+        require(msg.sender == _owner, "only owner can transfer his rights");
         _owner = owner_;
     }
 

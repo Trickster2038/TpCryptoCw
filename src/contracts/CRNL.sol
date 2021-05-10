@@ -75,7 +75,7 @@ contract CRNL is ICRNL {
 
     modifier revealPhase(){
         require(block.timestamp > (startTime + durationCommitTime), "reveal phase is not started");
-        require(block.timestamp < (startTime + durationCommitTime + durationRevealTime), "reveal phase is finished");
+        require(block.timestamp < (startTime + durationCommitTime + durationRevealTime), "reveal phase finished");
         _;
     }
 
@@ -86,7 +86,8 @@ contract CRNL is ICRNL {
     }
 
     modifier selfDistructPhase(){
-        require(block.timestamp > (startTime + durationCommitTime + durationRevealTime + durationRewardingTime));
+        require(block.timestamp > (startTime + durationCommitTime + durationRevealTime + durationRewardingTime),
+        "distruct phase is not started");
         _;
     }
 
@@ -204,6 +205,7 @@ contract CRNL is ICRNL {
         _owner = owner_;
     }
 
+    // owner's Fee is independent from time
     function rewardOwner() public {
         payable(_owner).transfer(ownerRewardUnspent);
         ownerRewardUnspent = 0;

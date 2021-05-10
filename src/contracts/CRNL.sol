@@ -1,8 +1,11 @@
 pragma solidity ^0.8.0;
 
 import "./ICRNL.sol";
+import "./SafeMath.sol";
 
 contract CRNL is ICRNL {
+
+    using SafeMath for uint;
 
     uint128 public maxNum;
 
@@ -161,7 +164,7 @@ contract CRNL is ICRNL {
         _isRewardCounted = true;
 
         _minDifference = maxNum + 1;
-        _avgNum = (_sumNum * 2) / (_totalRevealsCount * 3);
+        _avgNum = (_sumNum * 2).div(_totalRevealsCount * 3);
         uint256 difference;
         uint256 i;
         uint256 countWinners = 0;
@@ -183,7 +186,7 @@ contract CRNL is ICRNL {
         payable(msg.sender).transfer(_totalParticipants * counterFee); // reward for calling
         _totalParticipants--;
         payable(msg.sender).transfer(betSize); // reward for calling
-        _winnerStake = (betSize * _totalParticipants) / countWinners; // garants not x/0?
+        _winnerStake = (betSize.mul(_totalParticipants)).div(countWinners); // garants not x/0?
     }
 
     function takeReward() public override

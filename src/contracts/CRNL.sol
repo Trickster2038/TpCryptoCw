@@ -50,9 +50,10 @@ contract CRNL is ICRNL {
     
     mapping (address => UserData) private _users;
 
-    constructor (uint128 maxNum_, bool isDestructRewardOwner_, uint256 betSize_, uint256 honorFee_, uint256 ownerFee_, 
-    uint256 counterFee_,uint256 maxParticipants_, uint startTime_, uint durationCommitTime_,
-    uint durationRevealTime_, uint durationRewardingTime_) {
+    constructor (uint128 maxNum_, bool isDestructRewardOwner_, 
+    uint256 betSize_, uint256 honorFee_, uint256 ownerFee_, uint256 counterFee_,
+    uint256 maxParticipants_, 
+    uint startTime_, uint durationCommitTime_, uint durationRevealTime_, uint durationRewardingTime_) {
         _owner = msg.sender;
         isDestructRewardOwner = isDestructRewardOwner_;
         maxNum = maxNum_;

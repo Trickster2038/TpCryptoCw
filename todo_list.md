@@ -13,3 +13,7 @@ ICRNL:
 
 // USE SAFEMATH!!!
 ```
+
+## Tests
+- fault tolerance
+- destruct fees

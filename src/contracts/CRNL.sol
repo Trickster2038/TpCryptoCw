@@ -18,7 +18,7 @@ contract CRNL is ICRNL {
     uint public durationRevealTime;
     uint public durationRewardingTime;
 
-    uint256 private _avgNum;
+    uint256 private _avgNum;    // 2/3 of avg
     uint256 private _minDifference;
     //uint256 private _totalRevealsCount;
     //uint256 private _totalBetsAmount;
@@ -36,7 +36,7 @@ contract CRNL is ICRNL {
         bool isCommited;
         uint128 revealNum;
         bool isRevealed;
-        bool isTookPrize;
+        bool isTookReward;
         // bool isWinner;
     }
 
@@ -148,12 +148,12 @@ contract CRNL is ICRNL {
     {
         require(_users[msg.sender].isCommited, "not commited"); // necessary if cond2?
         require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
-        require(!_isAwardCounted, "awards already counted");
+        require(!_isAwardCounted, "rewards already counted");
 
         _isAwardCounted = true;
 
         _minDifference = maxNum + 1;
-        _avgNum = _sumNum / _totalParticipants;
+        _avgNum = (_sumNum * 2) / (_totalParticipants * 3);
         uint256 difference;
         uint256 i;
         uint256 countWinners = 0;
@@ -183,8 +183,8 @@ contract CRNL is ICRNL {
     {
         require(_users[msg.sender].isCommited, "not commited"); // necessary?
         require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
-        require(!_users[msg.sender].isTookPrize, "prize is already taken");
-        require(_isAwardCounted, "award not counted");
+        require(!_users[msg.sender].isTookReward, "reward is already taken");
+        require(_isAwardCounted, "reward not counted");
 
         uint256 difference;
         if(_reveals[_users[msg.sender].id].revealNum > _avgNum){
@@ -196,6 +196,7 @@ contract CRNL is ICRNL {
         require(difference == _minDifference, "not winner");
         // require(_winnerStake > 0, "winner stake = 0");
         payable(msg.sender).transfer(_winnerStake);
+        _users[msg.sender].isTookReward = true;
     }
 
     function changeOwner(address owner_) public {

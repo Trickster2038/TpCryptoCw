@@ -226,7 +226,9 @@ def test_fault_tolerance():
 
     chain.sleep(86401) 
     t.countRewards({'from':accounts[2]}) # 2/3 AVG = (2/3)*((5 + 15) / 2)  => 6.66
+    balance = accounts[1].balance()
     t.takeReward({'from':accounts[1]}) # 5 is the closest to 6 
+    assert(accounts[1].balance() > balance)
     # assert True
 
 def test_two_winners():

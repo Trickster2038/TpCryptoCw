@@ -6,6 +6,7 @@ import "./SafeMath.sol";
 contract CRNL is ICRNL {
 
     using SafeMath for uint;
+    using SafeMath for uint128;
 
     uint128 public maxNum;
 
@@ -73,24 +74,26 @@ contract CRNL is ICRNL {
 
     modifier commitPhase() {
         require(block.timestamp > startTime, "contract is not started");
-        require(block.timestamp < (startTime + durationCommitTime), "commit phase finished");
+        require(block.timestamp < (startTime.add(durationCommitTime)), "commit phase finished");
         _;
     }
 
     modifier revealPhase(){
-        require(block.timestamp > (startTime + durationCommitTime), "reveal phase is not started");
-        require(block.timestamp < (startTime + durationCommitTime + durationRevealTime), "reveal phase finished");
+        require(block.timestamp > (startTime.add(durationCommitTime)), "reveal phase is not started");
+        require(block.timestamp < (startTime.add(durationCommitTime).add(durationRevealTime)), "reveal phase finished");
         _;
     }
 
     modifier rewardPhase(){
-        require(block.timestamp > (startTime + durationCommitTime + durationRevealTime), "reward phase is not started");
+        require(block.timestamp > (startTime.add(durationCommitTime).add(durationRevealTime)), "reward phase is not started");
         //require(block.timestamp < (startTime + durationCommitTime + durationRevealTime + durationRewardingTime));
         _;
     }
 
     modifier selfDestructPhase(){
-        require(block.timestamp > (startTime + durationCommitTime + durationRevealTime + durationRewardingTime),
+        require(block.timestamp > startTime.add(durationCommitTime) 
+                                            .add(durationRevealTime) 
+                                            .add(durationRewardingTime), 
         "destruct phase is not started");
         _;
     }
@@ -110,16 +113,16 @@ contract CRNL is ICRNL {
     {
         require(!_users[msg.sender].isCommited, "already commited");
         require(_totalParticipants < maxParticipants, "max part-s limit overflow");
-        require(msg.value >= betSize + honorFee + ownerFee + counterFee, "not enougth ETH");
+        require(msg.value >= betSize.add(honorFee).add(ownerFee).add(counterFee), "not enougth ETH");
 
         _totalParticipants++;
         _users[msg.sender].id = _totalParticipants;
         _users[msg.sender].commitHash = commitHash_;
         _users[msg.sender].isCommited = true;
 
-        ownerRewardUnspent += ownerFee;
+        ownerRewardUnspent = ownerRewardUnspent.add(ownerFee);
 
-        uint256 extra = msg.value - (betSize + honorFee + ownerFee + counterFee);
+        uint256 extra = msg.value.sub( betSize.add(honorFee).add(ownerFee).add(counterFee) );
         payable(msg.sender).transfer(extra);
     }
 
@@ -139,7 +142,8 @@ contract CRNL is ICRNL {
         require(revealNum_ <= maxNum, "num limit overflow");
         uint256 revealNum256 = uint256(revealNum_);
         uint256 salt256 = uint256(salt_);
-
+        
+        // safe due to 128 => 256 
         uint256 secret = uint256((1<<255) + (revealNum256<<128) + salt256);
         bytes memory secret_b = abi.encodePacked(secret);
         uint256 proof = uint256(sha256(secret_b));
@@ -150,8 +154,9 @@ contract CRNL is ICRNL {
         _reveals[_users[msg.sender].id].user = msg.sender;
         _reveals[_users[msg.sender].id].revealNum = revealNum_;
 
+        // is safe due to users limit
         _totalRevealsCount++;
-        _sumNum += revealNum_;
+        _sumNum = _sumNum.add(revealNum_);
     }
 
     function countRewards() public override
@@ -163,11 +168,12 @@ contract CRNL is ICRNL {
 
         _isRewardCounted = true;
 
-        _minDifference = maxNum + 1;
-        _avgNum = (_sumNum * 2).div(_totalRevealsCount * 3);
+        // safe due to 128 => 256
+        _minDifference = uint256(maxNum) + 1;
+        _avgNum = ( _sumNum.mul(2) ).div( _totalRevealsCount.mul(3) );
         uint256 difference;
         uint256 i;
-        uint256 countWinners = 0;
+        uint256 countWinners = 0; // at least 1 must exist
         for (i = 1; i <= _totalParticipants; i++) {
             if(_reveals[i].revealNum > _avgNum){
                 difference = _reveals[i].revealNum - _avgNum;
@@ -179,12 +185,12 @@ contract CRNL is ICRNL {
                 _minDifference = difference;
                 countWinners = 1;
             } else if(difference == _minDifference){
-                countWinners++;
+                countWinners = countWinners.add(1);
             }
         }
         
-        payable(msg.sender).transfer(_totalParticipants * counterFee); // reward for calling
-        _totalParticipants--;
+        payable(msg.sender).transfer(_totalParticipants.mul(counterFee)); // reward for calling
+        _totalParticipants = _totalParticipants.sub(1);
         payable(msg.sender).transfer(betSize); // reward for calling
         _winnerStake = (betSize.mul(_totalParticipants)).div(countWinners); // garants not x/0?
     }
@@ -199,9 +205,9 @@ contract CRNL is ICRNL {
 
         uint256 difference;
         if(_reveals[_users[msg.sender].id].revealNum > _avgNum){
-            difference = _reveals[_users[msg.sender].id].revealNum - _avgNum;
+            difference = _reveals[_users[msg.sender].id].revealNum .sub(_avgNum);
         } else {
-            difference = _avgNum - _reveals[_users[msg.sender].id].revealNum;
+            difference = _avgNum .sub(_reveals[_users[msg.sender].id].revealNum);
         }
 
         require(difference == _minDifference, "not winner");

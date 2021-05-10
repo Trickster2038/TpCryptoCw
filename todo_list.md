@@ -17,3 +17,4 @@ ICRNL:
 ```
 
 ## Tests
+- multi winners

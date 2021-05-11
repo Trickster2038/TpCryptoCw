@@ -273,6 +273,23 @@ def test_two_winners():
     with reverts("not winner"):
         t.takeReward({'from':accounts[1]})
 
+# checks if contract doesn't revert for only 1 user
+def test_only_user():
+    t = CRNL[0]
+    chain.sleep(1) 
+    balance0 = accounts[1].balance()
+    t.commit(84237577606170373470970710271612687310126724891082767247421816067059279455482, \
+        {'from':accounts[1], 'value': 225}) # 15, 777
+    assert(balance0 - 220 == accounts[1].balance())
+    chain.sleep(86401) 
+    t.reveal(15,777,{'from':accounts[1]})
+    assert(balance0 - 120 == accounts[1].balance())
+    chain.sleep(86401) 
+    t.countRewards({'from':accounts[1]}) # 2/3 AVG = 7.78 => 7
+    assert(balance0 - 10 == accounts[1].balance())
+    t.takeReward({'from':accounts[1]}) # 10 is the closest to 7 
+    assert(balance0 - 10 == accounts[1].balance())
+    
 # same as first test, but for lite version
 def test_liteCRNL():
     t = liteCRNL.deploy(100, 100, chain.time(), 86400, {'from':accounts[0]})

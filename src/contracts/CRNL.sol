@@ -121,7 +121,7 @@ contract CRNL is ICRNL {
         1) saves hash(Ni+salt)
         2) gets ETH = bet + fees[] from new user
     */
-    function commit(uint256 commitHash_) public override payable
+    function commit(bytes32 commitHash_) public override payable
     commitPhase
     {
         require(!_users[msg.sender].isCommited, "already commited");
@@ -130,7 +130,8 @@ contract CRNL is ICRNL {
 
         _totalParticipants++;
         _users[msg.sender].id = _totalParticipants;
-        _users[msg.sender].commitHash = commitHash_;
+        uint256 intCommitHash_ = uint256(commitHash_);
+        _users[msg.sender].commitHash = intCommitHash_;
         _users[msg.sender].isCommited = true;
 
         ownerRewardUnspent = ownerRewardUnspent.add(ownerFee);
@@ -140,11 +141,12 @@ contract CRNL is ICRNL {
     }
 
     // changes hash(Ni+salt) without any fees
-    function changeCommitHash(uint256 commitHash_) public override 
+    function changeCommitHash(bytes32 commitHash_) public override 
     commitPhase
     {
         require(_users[msg.sender].isCommited, "not commited");
-        _users[msg.sender].commitHash = commitHash_;
+        uint256 intCommitHash_ = uint256(commitHash_);
+        _users[msg.sender].commitHash = intCommitHash_;
     }
 
     /* 

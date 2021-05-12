@@ -19,15 +19,15 @@ def test_default_usage():
     chain.sleep(1) 
 
     balance1 = accounts[1].balance()
-    t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 225}) # random
     assert(balance1 - 220 == accounts[1].balance())
 
-    t.changeCommitHash(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
+    t.changeCommitHash("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1]}) # 5, 654
-    t.commit(84237577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
         {'from':accounts[2], 'value': 220}) # 15, 777
-    t.commit(65256417849135098107207539788601443641021523921824715219531979081585702641459, \
+    t.commit("0x9045d2d894123dfb90a24453e03fdea3ab02099fb79a2eb93d31e0271c3a9f33", \
         {'from':accounts[3], 'value': 220}) # 10, 666  
 
     chain.sleep(86401) 
@@ -60,9 +60,9 @@ def test_destruct_fees():
     t = CRNL[0]
     t2 = CRNL.deploy(100, False, 100,100,10,10,15,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
     chain.sleep(1) 
-    t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 225}) # random
-    t2.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t2.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 225}) # random
     chain.sleep(86401*3)
     balance1 = accounts[0].balance()
@@ -76,7 +76,7 @@ def test_destruct_fees():
 def test_fake_reveal():
     t = CRNL[0]
     chain.sleep(1) 
-    t.commit(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
+    t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1], 'value': 221}) # 5, 654
     chain.sleep(86401) 
     with reverts("hash check fail"):
@@ -87,7 +87,7 @@ def test_low_balance():
     t = CRNL[0]
     chain.sleep(1) 
     with reverts("not enougth ETH"):
-        t.commit(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
+        t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1], 'value': 219}) # 5, 654
 
 # test that changeOwner() works and only owner can call it
@@ -102,9 +102,9 @@ def test_views():
     t = CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
     chain.sleep(1) 
     assert(t.isFreePlaces() == True)
-    t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 220}) # random
-    t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[2], 'value': 220}) # random
     assert(t.isFreePlaces() == False)
 
@@ -113,26 +113,26 @@ def test_people_limit():
     CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
     t = CRNL[1]
     chain.sleep(1) 
-    t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 220}) # random
-    t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[2], 'value': 220}) # random
     with reverts("max part-s limit overflow"):
-        t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+        t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
             {'from':accounts[3], 'value': 220}) # random
 
 # checks that reCall of commit, reveal, countReward, takeReward is unable
 def test_double_calls():
     t = CRNL[0]
     chain.sleep(1) 
-    t.commit(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
+    t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1], 'value': 221}) # 5, 654
-    t.commit(84237577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
         {'from':accounts[2], 'value': 220}) # 15, 777
-    t.commit(65256417849135098107207539788601443641021523921824715219531979081585702641459, \
+    t.commit("0x9045d2d894123dfb90a24453e03fdea3ab02099fb79a2eb93d31e0271c3a9f33", \
         {'from':accounts[3], 'value': 220}) # 10, 666  
     with reverts("already commited"):
-        t.commit(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
+        t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
             {'from':accounts[1], 'value': 221}) # 5, 654
 
     chain.sleep(86401)
@@ -155,11 +155,11 @@ def test_double_calls():
 def test_time_logic():
     t = CRNL[0]
     chain.sleep(1) 
-    t.commit(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
+    t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1], 'value': 221}) # 5, 654
-    t.commit(84237577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
         {'from':accounts[2], 'value': 220}) # 15, 777
-    t.commit(65256417849135098107207539788601443641021523921824715219531979081585702641459, \
+    t.commit("0x9045d2d894123dfb90a24453e03fdea3ab02099fb79a2eb93d31e0271c3a9f33", \
         {'from':accounts[3], 'value': 220}) # 10, 666 
     with reverts("reveal phase is not started"):
         t.reveal(5,654,{'from':accounts[1]})
@@ -173,7 +173,7 @@ def test_time_logic():
     with reverts("reward phase is not started"):
         t.takeReward({'from':accounts[1]}) # 5 is the closest to 6 
     with reverts("commit phase finished"):
-        t.commit(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
+        t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
             {'from':accounts[5], 'value': 221}) # 5, 654
 
     chain.sleep(86401)
@@ -191,11 +191,11 @@ def test_time_logic():
 def test_stages_logic():
     t = CRNL[0]
     chain.sleep(1) 
-    t.commit(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
+    t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1], 'value': 220}) # 5, 654
-    t.commit(84237577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
         {'from':accounts[2], 'value': 220}) # 15, 777
-    t.commit(65256417849135098107207539788601443641021523921824715219531979081585702641459, \
+    t.commit("0x9045d2d894123dfb90a24453e03fdea3ab02099fb79a2eb93d31e0271c3a9f33", \
         {'from':accounts[3], 'value': 220}) # 10, 666  
     chain.sleep(86401) 
     t.reveal(5,654,{'from':accounts[1]})
@@ -220,11 +220,11 @@ def test_stages_logic():
 def test_fault_tolerance():
     t = CRNL[0]
     chain.sleep(1) 
-    t.commit(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
-        {'from':accounts[1], 'value': 225}) # random
-    t.commit(84237577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
+        {'from':accounts[1], 'value': 225}) # 5, 654
+    t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
         {'from':accounts[2], 'value': 220}) # 15, 777
-    t.commit(65256417849135098107207539788601443641021523921824715219531979081585702641459, \
+    t.commit("0x9045d2d894123dfb90a24453e03fdea3ab02099fb79a2eb93d31e0271c3a9f33", \
         {'from':accounts[3], 'value': 220}) # 10, 666  
 
     chain.sleep(86401) 
@@ -247,11 +247,11 @@ def test_two_winners():
     t = CRNL[0]
     chain.sleep(1) 
 
-    t.commit(84237577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
         {'from':accounts[1], 'value': 225}) # 15, 777
-    t.commit(65256417849135098107207539788601443641021523921824715219531979081585702641459, \
+    t.commit("0x9045d2d894123dfb90a24453e03fdea3ab02099fb79a2eb93d31e0271c3a9f33", \
         {'from':accounts[2], 'value': 220}) # 10, 666
-    t.commit(65256417849135098107207539788601443641021523921824715219531979081585702641459, \
+    t.commit("0x9045d2d894123dfb90a24453e03fdea3ab02099fb79a2eb93d31e0271c3a9f33", \
         {'from':accounts[3], 'value': 220}) # 10, 666  
 
     chain.sleep(86401) 
@@ -278,7 +278,7 @@ def test_only_user():
     t = CRNL[0]
     chain.sleep(1) 
     balance0 = accounts[1].balance()
-    t.commit(84237577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
         {'from':accounts[1], 'value': 225}) # 15, 777
     assert(balance0 - 220 == accounts[1].balance())
     chain.sleep(86401) 
@@ -296,15 +296,15 @@ def test_liteCRNL():
     chain.sleep(1) 
 
     balance1 = accounts[1].balance()
-    t.commit(12347577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 225}) # random
     assert(balance1 - 220 == accounts[1].balance())
 
-    t.changeCommitHash(34800169113441137656655510613550640410253994535886922253593317958438436228110, \
+    t.changeCommitHash("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1]}) # 5, 654
-    t.commit(84237577606170373470970710271612687310126724891082767247421816067059279455482, \
+    t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
         {'from':accounts[2], 'value': 220}) # 15, 777
-    t.commit(65256417849135098107207539788601443641021523921824715219531979081585702641459, \
+    t.commit("0x9045d2d894123dfb90a24453e03fdea3ab02099fb79a2eb93d31e0271c3a9f33", \
         {'from':accounts[3], 'value': 220}) # 10, 666  
 
     chain.sleep(86401) 

@@ -265,6 +265,8 @@ contract CRNL is ICRNL {
     function destruct() public
     selfDestructPhase
     {
+        payable(_owner).transfer(ownerRewardUnspent);
+        ownerRewardUnspent = 0;
         if(isDestructRewardOwner){
             selfdestruct(payable(_owner));
         } else {

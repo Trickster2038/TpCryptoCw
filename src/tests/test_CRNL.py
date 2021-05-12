@@ -70,7 +70,7 @@ def test_destruct_fees():
     assert(balance1 == accounts[0].balance() - 220)
     balance2 = accounts[7].balance()
     t2.destruct({'from':accounts[7]})
-    assert(balance2 == accounts[7].balance() - 220)
+    assert(balance2 == accounts[7].balance() - 210) # 10 => accounts[0]
 
 # checks that fake revealNumber fails to reveal
 def test_fake_reveal():

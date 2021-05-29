@@ -23,13 +23,13 @@ contract CRNL is ICRNL {
     uint public durationRevealTime;
     uint public durationRewardingTime;
 
-    uint256 private _avgNum;    // 2/3 of real avg
+    uint256 public avgNum;    // 2/3 of real avg
     uint256 private _minDifference; // min(Ni-_avgNum)
     uint256 private _totalRevealsCount; // number of revealed users
     uint256 private _sumNum; // sum(Ni)
     uint256 private _totalParticipants; // count(Users)
     uint256 private _winnerStake; // reward size
-    bool private _isRewardCounted; 
+    bool public isRewardCounted; 
     address private _owner;
     uint256 public ownerRewardUnspent; // unspent owner fees
     bool public isDestructRewardOwner; // who gets destruct reward
@@ -106,15 +106,51 @@ contract CRNL is ICRNL {
 
     // buggy working with "commitPhase" modifier
     // let new user know if he can became participant
-    function isFreePlaces() public override view returns(bool isFreePlaces_)
+    function isFreePlaces() public override view 
+    commitPhase 
+    returns(bool isFreePlaces_)
     {
         return (_totalParticipants < maxParticipants);
     }
 
-    // shows if rewardCount() called already
-    function isRewardCounted() public override view returns(bool isRewardCounted_){
-        return _isRewardCounted;
+    function getWinnerStake() public override view returns(uint256 winnerStake_){
+        require(isRewardCounted, "not counted yet");
+        return _winnerStake;
     }
+
+    /*
+        0) not started
+        1) commit
+        2) reveal
+        3) rewarding (not count)
+        4) rewarding (count)
+    */
+    function getPhaseId() public override view returns(uint8 phaseId_){
+        uint8 phaseId_;
+        if(block.timestamp < startTime){
+            phaseId_ = 0;
+        }
+        if((block.timestamp >= startTime)
+        && (block.timestamp < (startTime.add(durationCommitTime)))){
+            phaseId_ = 1;
+        } 
+        if((block.timestamp >= (startTime.add(durationCommitTime)))
+        && (block.timestamp < (startTime.add(durationCommitTime).add(durationRevealTime)))){
+            phaseId_ = 2;
+        }
+        if((block.timestamp >= (startTime.add(durationCommitTime).add(durationRevealTime)))
+        && (!isRewardCounted)){
+            phaseId_ = 3;
+        }
+        if((block.timestamp >= (startTime.add(durationCommitTime).add(durationRevealTime)))
+        && (isRewardCounted)){
+            phaseId_ = 4;
+        }
+        return phaseId_;
+    }
+
+    event DestructEvent();
+    
 
     /* 
         1) saves hash(Ni+salt)
@@ -190,23 +226,23 @@ contract CRNL is ICRNL {
     {
         require(_users[msg.sender].isCommited, "not commited"); 
         require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
-        require(!_isRewardCounted, "rewards already counted");
+        require(!isRewardCounted, "rewards already counted");
 
-        _isRewardCounted = true;
+        isRewardCounted = true;
 
         // safe due to 128 => 256
         _minDifference = uint256(maxNum) + 1;
-        _avgNum = ( _sumNum.mul(2) ).div( _totalRevealsCount.mul(3) ); // = 2/3 AVG
+        avgNum = ( _sumNum.mul(2) ).div( _totalRevealsCount.mul(3) ); // = 2/3 AVG
         uint256 difference;
         uint256 i;
         uint256 countWinners = 1; // at least 1 must exist
         for (i = 1; i <= _totalParticipants; i++) {
 
             // difference = abs(avg - Ni)
-            if(_reveals[i].revealNum > _avgNum){
-                difference = _reveals[i].revealNum - _avgNum;
+            if(_reveals[i].revealNum > avgNum){
+                difference = _reveals[i].revealNum - avgNum;
             } else {
-                difference = _avgNum - _reveals[i].revealNum;
+                difference = avgNum - _reveals[i].revealNum;
             }
 
             if(difference < _minDifference){
@@ -232,15 +268,15 @@ contract CRNL is ICRNL {
         require(_users[msg.sender].isCommited, "not commited"); 
         require(_users[msg.sender].isRevealed, "not revealed"); // Necessary to exclude x/0
         require(!_users[msg.sender].isTookReward, "reward is already taken");
-        require(_isRewardCounted, "reward not counted");
+        require(isRewardCounted, "reward not counted");
 
         uint256 difference;
 
         // difference = abs(_avgNum - Ni)
-        if(_reveals[_users[msg.sender].id].revealNum > _avgNum){
-            difference = _reveals[_users[msg.sender].id].revealNum .sub(_avgNum);
+        if(_reveals[_users[msg.sender].id].revealNum > avgNum){
+            difference = _reveals[_users[msg.sender].id].revealNum .sub(avgNum);
         } else {
-            difference = _avgNum .sub(_reveals[_users[msg.sender].id].revealNum);
+            difference = avgNum .sub(_reveals[_users[msg.sender].id].revealNum);
         }
 
         require(difference == _minDifference, "not winner");
@@ -266,6 +302,7 @@ contract CRNL is ICRNL {
     {
         payable(_owner).transfer(ownerRewardUnspent);
         ownerRewardUnspent = 0;
+        emit DestructEvent();
         if(isDestructRewardOwner){
             selfdestruct(payable(_owner));
         } else {

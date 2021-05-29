@@ -3,6 +3,7 @@ from brownie import CRNL
 from brownie import liteCRNL
 from brownie import reverts
 from brownie import chain
+from brownie import history
 import pytest
 
 # deploys default contract
@@ -97,10 +98,14 @@ def test_change_owner():
         t.changeOwner(accounts[5], {'from':accounts[1]})
     t.changeOwner(accounts[5], {'from':accounts[0]})
 
-# test of view functions
-def test_views():
+# test of freePlaces functions
+def test_free_places():
     t = CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
     chain.sleep(1) 
+
+    # changes block.timestamp() when mined
+    t2 = CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
+
     assert(t.isFreePlaces() == True)
     t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 220}) # random
@@ -330,3 +335,49 @@ def test_liteCRNL():
     assert(balance5 + 10*3 == accounts[5].balance())
     chain.sleep(86401) 
     t.destruct({'from':accounts[7]})
+
+# tests that destruct even is emitted
+def test_destruct_event():
+    chain.sleep(86400 * 7)
+    t = CRNL[0]
+    t.destruct({'from':accounts[7]})
+    assert(history[1].events.keys()[0] == 'DestructEvent')
+
+# checks views working
+def test_views():
+    t = CRNL[0]
+    chain.sleep(1) 
+
+    # changes block.timestamp() when mined
+    t2 = CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
+
+    assert(t.getPhaseId() == 1)
+
+    t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
+        {'from':accounts[1], 'value': 225}) # random
+    t.changeCommitHash("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
+        {'from':accounts[1]}) # 5, 654
+    t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
+        {'from':accounts[2], 'value': 220}) # 15, 777
+    t.commit("0x9045d2d894123dfb90a24453e03fdea3ab02099fb79a2eb93d31e0271c3a9f33", \
+        {'from':accounts[3], 'value': 220}) # 10, 666  
+
+    chain.sleep(86405) 
+
+    # changes block.timestamp() when mined
+    t2 = CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
+
+    assert(t.getPhaseId() == 2)
+    t.reveal(5,654,{'from':accounts[1]})
+    t.reveal(15,777,{'from':accounts[2]})
+    t.reveal(10,666,{'from':accounts[3]})
+
+    chain.sleep(86405) 
+
+    # changes block.timestamp() when mined
+    t2 = CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
+
+    assert(t.getPhaseId() == 3)
+    t.countRewards({'from':accounts[3]}) # 2/3 AVG = 6.67 => 6    
+    assert(t.getPhaseId() == 4)
+    assert(t.getWinnerStake() > 0)

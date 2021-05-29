@@ -11,6 +11,7 @@ interface ICRNL{
     // let new user know if he can became participant
     function isFreePlaces() external view returns(bool isFreePlaces_); 
 
-    function isRewardCounted() external view returns(bool isRewardCounted_);
+    function getPhaseId() external view returns(uint8 phaseId_);
+    function getWinnerStake() external view returns(uint256  winnerStake_);
 }
 

@@ -381,3 +381,13 @@ def test_views():
     t.countRewards({'from':accounts[3]}) # 2/3 AVG = 6.67 => 6    
     assert(t.getPhaseId() == 4)
     assert(t.getWinnerStake() > 0)
+    assert(t.getAvg() == 6)
+
+# checks views reverts if used too soon
+def test_views_reverts():
+    t = CRNL[0]
+    chain.sleep(1) 
+    with reverts("reward is not counted yet"):
+        t.getWinnerStake()
+    with reverts("AVG is not counted yet"):
+        t.getAvg()

@@ -23,8 +23,8 @@ contract CRNL is ICRNL {
     uint public durationRevealTime;
     uint public durationRewardingTime;
 
-    uint256 public avgNum;    // 2/3 of real avg
-    uint256 private _minDifference; // min(Ni-_avgNum)
+    uint256 private _avgNum;    // 2/3 of real avg
+    uint256 private _minDifference; // min(Ni-__avgNum)
     uint256 private _totalRevealsCount; // number of revealed users
     uint256 private _sumNum; // sum(Ni)
     uint256 private _totalParticipants; // count(Users)
@@ -114,8 +114,13 @@ contract CRNL is ICRNL {
     }
 
     function getWinnerStake() public override view returns(uint256 winnerStake_){
-        require(isRewardCounted, "not counted yet");
+        require(isRewardCounted, "reward is not counted yet");
         return _winnerStake;
+    }
+
+    function getAvg() public override view returns(uint256 avg_){
+        require(isRewardCounted, "AVG is not counted yet");
+        return _avgNum;
     }
 
     /*
@@ -232,17 +237,17 @@ contract CRNL is ICRNL {
 
         // safe due to 128 => 256
         _minDifference = uint256(maxNum) + 1;
-        avgNum = ( _sumNum.mul(2) ).div( _totalRevealsCount.mul(3) ); // = 2/3 AVG
+        _avgNum = ( _sumNum.mul(2) ).div( _totalRevealsCount.mul(3) ); // = 2/3 AVG
         uint256 difference;
         uint256 i;
         uint256 countWinners = 1; // at least 1 must exist
         for (i = 1; i <= _totalParticipants; i++) {
 
             // difference = abs(avg - Ni)
-            if(_reveals[i].revealNum > avgNum){
-                difference = _reveals[i].revealNum - avgNum;
+            if(_reveals[i].revealNum > _avgNum){
+                difference = _reveals[i].revealNum - _avgNum;
             } else {
-                difference = avgNum - _reveals[i].revealNum;
+                difference = _avgNum - _reveals[i].revealNum;
             }
 
             if(difference < _minDifference){
@@ -272,11 +277,11 @@ contract CRNL is ICRNL {
 
         uint256 difference;
 
-        // difference = abs(_avgNum - Ni)
-        if(_reveals[_users[msg.sender].id].revealNum > avgNum){
-            difference = _reveals[_users[msg.sender].id].revealNum .sub(avgNum);
+        // difference = abs(__avgNum - Ni)
+        if(_reveals[_users[msg.sender].id].revealNum > _avgNum){
+            difference = _reveals[_users[msg.sender].id].revealNum .sub(_avgNum);
         } else {
-            difference = avgNum .sub(_reveals[_users[msg.sender].id].revealNum);
+            difference = _avgNum .sub(_reveals[_users[msg.sender].id].revealNum);
         }
 
         require(difference == _minDifference, "not winner");

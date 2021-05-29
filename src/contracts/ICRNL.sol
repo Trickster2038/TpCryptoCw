@@ -13,5 +13,6 @@ interface ICRNL{
 
     function getPhaseId() external view returns(uint8 phaseId_);
     function getWinnerStake() external view returns(uint256  winnerStake_);
+    function getAvg() external view returns(uint256  avg_);
 }
 

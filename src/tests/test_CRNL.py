@@ -1,9 +1,4 @@
-from brownie import accounts
-from brownie import CRNL
-from brownie import liteCRNL
-from brownie import reverts
-from brownie import chain
-from brownie import history
+from brownie import CRNL, liteCRNL, reverts, chain, history, accounts
 import pytest
 
 # deploys default contract
@@ -13,11 +8,11 @@ def deploy_fixture(fn_isolation):
         100,100,10,10, \
         15, \
         chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
+    chain.sleep(1)
 
 # checks if all functions work in normal conditions
 def test_default_usage():
     t = CRNL[0]
-    chain.sleep(1) 
 
     balance1 = accounts[1].balance()
     t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
@@ -60,12 +55,12 @@ def test_default_usage():
 def test_destruct_fees():
     t = CRNL[0]
     t2 = CRNL.deploy(100, False, 100,100,10,10,15,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
-    chain.sleep(1) 
+    chain.sleep(1)
     t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 225}) # random
     t2.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 225}) # random
-    chain.sleep(86401*3)
+    chain.sleep(86401 * 3)
     balance1 = accounts[0].balance()
     t.destruct({'from':accounts[7]})
     assert(balance1 == accounts[0].balance() - 220)
@@ -76,7 +71,6 @@ def test_destruct_fees():
 # checks that fake revealNumber fails to reveal
 def test_fake_reveal():
     t = CRNL[0]
-    chain.sleep(1) 
     t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1], 'value': 221}) # 5, 654
     chain.sleep(86401) 
@@ -86,7 +80,6 @@ def test_fake_reveal():
 # checks that low msg.value fails to commit
 def test_low_balance():
     t = CRNL[0]
-    chain.sleep(1) 
     with reverts("not enougth ETH"):
         t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1], 'value': 219}) # 5, 654
@@ -101,8 +94,8 @@ def test_change_owner():
 # test of freePlaces functions
 def test_free_places():
     t = CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
-    chain.sleep(1) 
-
+    chain.sleep(1)
+    
     # changes block.timestamp() when mined
     t2 = CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
 
@@ -117,7 +110,6 @@ def test_free_places():
 def test_people_limit():
     CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
     t = CRNL[1]
-    chain.sleep(1) 
     t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 220}) # random
     t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
@@ -129,7 +121,6 @@ def test_people_limit():
 # checks that reCall of commit, reveal, countReward, takeReward is unable
 def test_double_calls():
     t = CRNL[0]
-    chain.sleep(1) 
     t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1], 'value': 221}) # 5, 654
     t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
@@ -159,7 +150,6 @@ def test_double_calls():
 # checks that time modifiers works
 def test_time_logic():
     t = CRNL[0]
-    chain.sleep(1) 
     t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1], 'value': 221}) # 5, 654
     t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
@@ -195,7 +185,6 @@ def test_time_logic():
 # cheks that stages can't be skipped
 def test_stages_logic():
     t = CRNL[0]
-    chain.sleep(1) 
     t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1], 'value': 220}) # 5, 654
     t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
@@ -224,7 +213,6 @@ def test_stages_logic():
 # cheks that contact works if someone didn't reveal
 def test_fault_tolerance():
     t = CRNL[0]
-    chain.sleep(1) 
     t.commit("0x4cf0329d3493fa458d54ff3008e9f4c69573b7720769671ef587a0082d184c0e", \
         {'from':accounts[1], 'value': 225}) # 5, 654
     t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
@@ -250,8 +238,6 @@ def test_fault_tolerance():
 # cheks that contract count prize size correct
 def test_two_winners():
     t = CRNL[0]
-    chain.sleep(1) 
-
     t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
         {'from':accounts[1], 'value': 225}) # 15, 777
     t.commit("0x9045d2d894123dfb90a24453e03fdea3ab02099fb79a2eb93d31e0271c3a9f33", \
@@ -281,25 +267,27 @@ def test_two_winners():
 # checks if contract doesn't revert for only 1 user
 def test_only_user():
     t = CRNL[0]
-    chain.sleep(1) 
+
     balance0 = accounts[1].balance()
     t.commit("0xba3cc781c216dd7efa8a4295804186167660c8296119071ce2d45af33013e4fa", \
         {'from':accounts[1], 'value': 225}) # 15, 777
     assert(balance0 - 220 == accounts[1].balance())
+
     chain.sleep(86401) 
     t.reveal(15,777,{'from':accounts[1]})
     assert(balance0 - 120 == accounts[1].balance())
+
     chain.sleep(86401) 
     t.countRewards({'from':accounts[1]}) # 2/3 AVG = 7.78 => 7
     assert(balance0 - 10 == accounts[1].balance())
+
     t.takeReward({'from':accounts[1]}) # 10 is the closest to 7 
     assert(balance0 - 10 == accounts[1].balance())
     
 # same as first test, but for lite version
 def test_liteCRNL():
     t = liteCRNL.deploy(100, 100, chain.time(), 86400, {'from':accounts[0]})
-    chain.sleep(1) 
-
+    chain.sleep(1)
     balance1 = accounts[1].balance()
     t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 225}) # random
@@ -346,7 +334,6 @@ def test_destruct_event():
 # checks views working
 def test_views():
     t = CRNL[0]
-    chain.sleep(1) 
 
     # changes block.timestamp() when mined
     t2 = CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
@@ -386,8 +373,15 @@ def test_views():
 # checks views reverts if used too soon
 def test_views_reverts():
     t = CRNL[0]
-    chain.sleep(1) 
+     
     with reverts("reward is not counted yet"):
         t.getWinnerStake()
     with reverts("AVG is not counted yet"):
         t.getAvg()
+
+# additional check of time logic
+def test_not_started():
+    t2 = CRNL.deploy(100, True, 100,100,10,10,2,(chain.time()+100), 86400, 86400, 84000, {'from':accounts[0]})
+    with reverts("contract is not started"):
+        t2.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
+        {'from':accounts[1], 'value': 225}) # random

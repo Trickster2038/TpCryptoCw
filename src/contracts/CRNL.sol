@@ -38,7 +38,6 @@ contract CRNL is ICRNL {
         uint256 id;
         uint256 commitHash; // hash(Ni+salt)
         bool isCommited;
-        uint128 revealNum; // Ni
         bool isRevealed;
         bool isTookReward; 
     }

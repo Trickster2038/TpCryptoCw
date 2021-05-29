@@ -42,13 +42,8 @@ contract CRNL is ICRNL {
         bool isTookReward; 
     }
 
-    struct Reveal {
-        uint128 revealNum;
-        address user;
-    }
-
     // id => Ni, userAddress
-    mapping (uint256 => Reveal) private _reveals;
+    mapping (uint256 => uint128) private _reveals;
     
     mapping (address => UserData) private _users;
 
@@ -212,8 +207,7 @@ contract CRNL is ICRNL {
         require(proof == _users[msg.sender].commitHash, "hash check fail");
         payable(msg.sender).transfer(honorFee);
         _users[msg.sender].isRevealed = true;
-        _reveals[_users[msg.sender].id].user = msg.sender;
-        _reveals[_users[msg.sender].id].revealNum = revealNum_;
+        _reveals[_users[msg.sender].id] = revealNum_;
 
         // is safe due to users limit
         _totalRevealsCount++;
@@ -244,10 +238,10 @@ contract CRNL is ICRNL {
         for (i = 1; i <= _totalParticipants; i++) {
 
             // difference = abs(avg - Ni)
-            if(_reveals[i].revealNum > _avgNum){
-                difference = _reveals[i].revealNum - _avgNum;
+            if(_reveals[i] > _avgNum){
+                difference = _reveals[i] - _avgNum;
             } else {
-                difference = _avgNum - _reveals[i].revealNum;
+                difference = _avgNum - _reveals[i];
             }
 
             if(difference < _minDifference){
@@ -278,10 +272,10 @@ contract CRNL is ICRNL {
         uint256 difference;
 
         // difference = abs(__avgNum - Ni)
-        if(_reveals[_users[msg.sender].id].revealNum > _avgNum){
-            difference = _reveals[_users[msg.sender].id].revealNum .sub(_avgNum);
+        if(_reveals[_users[msg.sender].id] > _avgNum){
+            difference = _reveals[_users[msg.sender].id] .sub(_avgNum);
         } else {
-            difference = _avgNum .sub(_reveals[_users[msg.sender].id].revealNum);
+            difference = _avgNum .sub(_reveals[_users[msg.sender].id]);
         }
 
         require(difference == _minDifference, "not winner");

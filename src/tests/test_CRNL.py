@@ -110,6 +110,7 @@ def test_free_places():
 def test_people_limit():
     CRNL.deploy(100, True, 100,100,10,10,2,chain.time(), 86400, 86400, 84000, {'from':accounts[0]})
     t = CRNL[1]
+    chain.sleep(1)
     t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \
         {'from':accounts[1], 'value': 220}) # random
     t.commit("0x1f48afeee3247a1506c5ee8602abcfdf1909c3c5142a6a20223577fee8161f60", \

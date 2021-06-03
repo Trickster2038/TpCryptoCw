@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-import "./ICRNL.sol";
+import "../interfaces/ICRNL.sol";
 import "./SafeMath.sol";
 
 // Commit-reveal numeric lottery
